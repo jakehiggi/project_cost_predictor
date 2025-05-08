@@ -10,14 +10,13 @@ current_dir = Path(__file__).resolve(strict=True).parent
 csv_path = current_dir / '..' / 'data' / 'project_data.csv'
 df = pd.read_csv(csv_path)
 
-# Encode categorical variables (industry types)
+# Encode categorical variables
 df_encoded = pd.get_dummies(df, columns=['Industry'])
 
 # Define X (features) and y (target)
 X = df_encoded.drop(['Project_ID', 'Actual_Cost'], axis=1)
 y = df_encoded['Actual_Cost']
 
-# Train-test split to validate model performance on unseen data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 param_grid = {
@@ -36,9 +35,9 @@ xgb_model = XGBRegressor(random_state=42)
 random_search = RandomizedSearchCV(
     estimator=xgb_model,
     param_distributions=param_grid,
-    n_iter=50,  # Number of random parameter combinations tested
-    scoring='neg_mean_absolute_error',  # Optimizing for MAE
-    cv=5,  # 5-fold cross-validation
+    n_iter=50,
+    scoring='neg_mean_absolute_error',
+    cv=5, 
     verbose=1,
     random_state=42,
     n_jobs=-1  # Use all available CPU cores
@@ -49,7 +48,7 @@ random_search.fit(X_train, y_train)
 best_model = random_search.best_estimator_
 y_pred = best_model.predict(X_test)
 
-# Evaluate clearly
+# Evaluate model
 mae = mean_absolute_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
 
@@ -60,7 +59,7 @@ print("Best Hyperparameters:", random_search.best_params_)
 # Save the model
 joblib.dump(best_model, 'xgb_actual_cost_model.pkl')
 
-# Interpretability using SHAP values to explain predictions clearly
-explainer = shap.Explainer(best_model)
-shap_values = explainer(X)
-shap.summary_plot(shap_values, X)
+# Shap values could be used if wanted - not so useful here.
+# explainer = shap.Explainer(best_model)
+# shap_values = explainer(X)
+# shap.summary_plot(shap_values, X)
